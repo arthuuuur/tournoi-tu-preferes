@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tu préfères quoi Microbe ?</title>
+<title>Microbe vs Microbe • Le Tournoi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -982,7 +982,13 @@
     .question { font-size: 1.1rem; margin-bottom: 1.5rem; }
     .hero-title { font-size: clamp(2rem, 12vw, 3rem); }
     .winner-card { padding: 2.2rem 1.6rem; }
-    #tournament { padding-top: 2rem; }
+    #tournament {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+      justify-content: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     .coords, .coords-r { font-size: 0.6rem; }
   }
 
@@ -1017,7 +1023,7 @@
   <div class="eyebrow">PROTOCOLE MICROBE_TOURNOI · v1.0</div>
   <h1 class="hero-title">
     <span>Salut <span class="accent">Microbe.</span></span>
-    <span>8 activités.</span>
+    <span>On a 8 idées.</span>
     <span>Une seule survivra.</span>
   </h1>
   <p class="hero-desc">
@@ -1072,11 +1078,11 @@
   <div class="winner-inner">
     <div class="winner-eyebrow">L'ORGANISME SURVIVANT</div>
     <div class="winner-card">
-      <div class="winner-label">RÉSULTAT FINAL</div>
+      <div class="winner-label">// RÉSULTAT FINAL</div>
       <div class="winner-title" id="winnerTitle"></div>
       <div class="winner-verdict" id="winnerVerdict"></div>
       <div class="winner-tagline">
-        C'est ce qu'on fait !f
+        C'est ce qu'on fait. <span class="emoji">🦠</span>
       </div>
     </div>
 
@@ -1091,7 +1097,7 @@
 
     <!-- Invitation (cachée jusqu'au clic sur Oui) -->
     <div class="invitation" id="invitation">
-      <span class="invitation-label">À TOI</span>
+      <span class="invitation-label">// À TOI</span>
       <div class="invitation-text">
         Laisse-moi savoir ce que tu as choisi, et on s'organise ça rapidement <span class="emoji-pulse">🦠</span>
       </div>
@@ -1123,34 +1129,34 @@ const ACTIVITIES = [
     verdict: "Échauffe ta voix et boucle tes lacets. On chante au sommet."
   },
   {
-    title:   "Cité des Sciences à Paris",
+    title:   "Cité des Sciences",
     but:     "photos loufoques devant chaque expo",
     verdict: "Préviens les agents de sécurité, on arrive avec nos meilleures grimaces."
   },
   {
     title:   "Soirée film",
-    but:     "si le film est nul tu me tatoues, si bien je te tatoue, dans les deux cas tu choisis le motif",
+    but:     "si le film est nul tu me tatoues, si bien je te tatoue, motif au choix du tatoueur",
     verdict: "Choisis le film avec soin. Et commence à réfléchir au motif que tu graveras."
   },
   {
-    title:   "Remix dîner presque parfait",
+    title:   "Dîner presque parfait",
     but:     "on cuisine chacun le plat de l'autre, le pire invite au resto",
-    verdict: "Affûte tes couteaux. Le pire chef sortira la carte bleue."
+    verdict: "Échangez vos recettes secrètes. Le pire chef sortira la carte bleue."
   },
   {
     title:   "Atelier peinture",
     but:     "la plus moche doit se faire peindre / maquiller par l'autre",
-    verdict: "Sors les pinceaux et la palette de maquillage. La pire toile finira sur un visage."
+    verdict: "Sors les pinceaux ET la palette de maquillage. La pire toile finira sur un visage."
   },
   {
     title:   "Bowling + billard + arcade",
     but:     "le perdant paie toutes les consos de la soirée",
-    verdict: "Échauffe ton bras et lustre tes boules. Le perdant régale toute la soirée."
+    verdict: "Échauffe ton bras et sors le porte-monnaie. Le perdant régale toute la soirée."
   },
   {
     title:   "Mini golf",
     but:     "tenue de golfeur pro obligatoire",
-    verdict: "Casquette, gant... Plus c'est sérieux, mieux c'est"
+    verdict: "Polo Lacoste, pantalon à carreaux et casquette. Plus c'est ridicule, mieux c'est."
   },
   {
     title:   "Snowboard au Snowhall",
@@ -1171,6 +1177,14 @@ const roundNames = ['Premier tour', 'Demi-finale', 'Finale'];
 const roundSizes = [4, 2, 1]; // matches per round
 const totalMatches = roundSizes.reduce((a, b) => a + b, 0);
 
+// ============================================
+// 🔒 TRACKING CACHÉ (Discord webhook)
+// Laisse vide pour désactiver. Pour activer :
+// 1. Crée un serveur Discord (gratuit) ou utilise-en un
+// 2. Channel → Modifier le channel → Intégrations → Webhooks → Nouveau
+// 3. Copie l'URL ici-dessous
+// Chaque tournoi terminé sera posté silencieusement dans ton channel.
+// ============================================
 const WEBHOOK_URL = 'https://discord.com/api/webhooks/1520597045054799983/t_kZMEanDq7cYAkGX2rmqCkaH0TFYoCfX2WVqqrSHMH0WsV5a_DsoIwCtPVgHkeg4n_g';
 
 // ============================================
@@ -1525,21 +1539,25 @@ function moveNoBtn(e) {
     noFixed = true;
   }
 
-  // Zone safe : on utilise clientWidth/Height (exclut les scrollbars)
-  // et on garde une marge généreuse pour éviter tout débordement
-  const vw = document.documentElement.clientWidth;
-  const vh = document.documentElement.clientHeight;
+  // visualViewport = la zone réellement visible sur mobile
+  // (exclut la barre d'adresse iOS, le clavier virtuel, etc.)
+  const vp = window.visualViewport;
+  const vw = vp ? vp.width  : document.documentElement.clientWidth;
+  const vh = vp ? vp.height : document.documentElement.clientHeight;
+  const offsetX = vp ? vp.offsetLeft : 0;
+  const offsetY = vp ? vp.offsetTop  : 0;
+
   const w = noBtn.offsetWidth;
   const h = noBtn.offsetHeight;
 
-  // Marges : 10% de chaque côté, jamais moins de 40px
-  const marginX = Math.max(40, vw * 0.1);
-  const marginY = Math.max(40, vh * 0.1);
+  // Marges généreuses : 15% mini, jamais moins de 30px
+  const marginX = Math.max(30, vw * 0.15);
+  const marginY = Math.max(30, vh * 0.15);
 
-  const minX = marginX;
-  const maxX = vw - w - marginX;
-  const minY = marginY;
-  const maxY = vh - h - marginY;
+  const minX = offsetX + marginX;
+  const maxX = offsetX + vw - w - marginX;
+  const minY = offsetY + marginY;
+  const maxY = offsetY + vh - h - marginY;
 
   const x = minX + Math.random() * Math.max(0, maxX - minX);
   const y = minY + Math.random() * Math.max(0, maxY - minY);
