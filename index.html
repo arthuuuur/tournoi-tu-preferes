@@ -916,8 +916,8 @@
     line-height: 1;
     transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
                 box-shadow 0.3s,
-                left 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
-                top 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+                background 0.3s,
+                border-color 0.3s;
   }
 
   .btn-yes {
@@ -1524,46 +1524,16 @@ const challengeEl = document.getElementById('challenge');
 const invitationEl = document.getElementById('invitation');
 
 let yesScale = 1;
-let noFixed = false;
 
 function moveNoBtn(e) {
   // Empêcher le clic réel d'avoir un effet
   if (e && e.preventDefault) e.preventDefault();
 
-  if (!noFixed) {
-    const rect = noBtn.getBoundingClientRect();
-    noBtn.style.position = 'fixed';
-    noBtn.style.left = rect.left + 'px';
-    noBtn.style.top = rect.top + 'px';
-    noBtn.style.margin = '0';
-    noFixed = true;
-  }
-
-  // visualViewport = la zone réellement visible sur mobile
-  // (exclut la barre d'adresse iOS, le clavier virtuel, etc.)
-  const vp = window.visualViewport;
-  const vw = vp ? vp.width  : document.documentElement.clientWidth;
-  const vh = vp ? vp.height : document.documentElement.clientHeight;
-  const offsetX = vp ? vp.offsetLeft : 0;
-  const offsetY = vp ? vp.offsetTop  : 0;
-
-  const w = noBtn.offsetWidth;
-  const h = noBtn.offsetHeight;
-
-  // Marges généreuses : 15% mini, jamais moins de 30px
-  const marginX = Math.max(30, vw * 0.15);
-  const marginY = Math.max(30, vh * 0.15);
-
-  const minX = offsetX + marginX;
-  const maxX = offsetX + vw - w - marginX;
-  const minY = offsetY + marginY;
-  const maxY = offsetY + vh - h - marginY;
-
-  const x = minX + Math.random() * Math.max(0, maxX - minX);
-  const y = minY + Math.random() * Math.max(0, maxY - minY);
-
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = y + 'px';
+  // Déplacement relatif autour de la position initiale, dans une zone de ±80px
+  const range = 80;
+  const x = (Math.random() - 0.5) * 2 * range;
+  const y = (Math.random() - 0.5) * 2 * range;
+  noBtn.style.transform = `translate(${x}px, ${y}px)`;
 
   // Oui grossit
   yesScale = Math.min(yesScale + 0.18, 2.6);
